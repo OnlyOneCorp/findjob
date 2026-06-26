@@ -534,7 +534,7 @@ function renderResults(){
   lastTop.forEach((r,i)=>{
     const j=r.job;
     const amz=`https://www.amazon.com/s?k=${encodeURIComponent(j.book.q)}&tag=${ONLYONE.AMAZON_TAG}`;
-    const cou=`${ONLYONE.COUPANG_BASE}${encodeURIComponent(j.book.q)}`;
+    const cou=ONLYONE.COUPANG_BASE;
     const el=document.createElement('div');
     el.className='res'+(i===0?' gold':'');
     el.style.animationDelay=(i*0.06)+'s';
