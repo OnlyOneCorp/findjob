@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>OnlyOne · 직업 찾기 / Career Finder</title>
+<meta name="description" content="좋아하는 걸 고르면, 어울리는 직업을 찾아드려요. OnlyOne." />
+
+<!-- ========== CONFIG (배포 시 교체) ========== -->
+<!-- GA4 측정 ID, 제휴 태그만 바꾸면 됩니다 -->
+<script>
+  window.ONLYONE = {
+    GA_ID: 'G-XXXXXXXXXX',                 // ← GA4 데이터 스트림 측정 ID
+    LANDING: 'https://main.onlyonecorpceo.workers.dev/',
+    CONTACT: 'onlyonecorpceo@gmail.com',
+    AMAZON_TAG: 'onlyone0c-20',             // ← Amazon Associates 태그
+    COUPANG_BASE: 'https://www.coupang.com/np/search?q=' // ← Coupang Partners 딥링크로 교체 권장
+  };
+</script>
+
+<link rel="preconnect" href="https://cdn.jsdelivr.net" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+
+<style>
+  :root{
+    --ink:#1d1d1f;
+    --muted:#6e6e73;
+    --hairline:rgba(0,0,0,.10);
+    --surface:#ffffff;
+    --bg:#f5f5f7;
+    --brand:#3f4550;       /* 로고 차콜 */
+    --accent:#0a84ff;      /* 선택/강조 */
+    --accent-soft:rgba(10,132,255,.10);
+    --radius:18px;
+    --shadow:0 1px 2px rgba(0,0,0,.04), 0 12px 30px rgba(0,0,0,.06);
+    --font:"Pretendard Variable",Pretendard,-apple-system,BlinkMacSystemFont,"SF Pro Text","Apple SD Gothic Neo",system-ui,sans-serif;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0}
+  body{
+    font-family:var(--font);
+    color:var(--ink);
+    background:var(--bg);
+    line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+    text-rendering:optimizeLegibility;
+  }
+  a{color:inherit}
+  button{font-family:inherit;cursor:pointer;border:none;background:none}
+
+  /* ---------- Header ---------- */
+  header{
+    position:sticky;top:0;z-index:50;
+    backdrop-filter:saturate(180%) blur(20px);
+    -webkit-backdrop-filter:saturate(180%) blur(20px);
+    background:rgba(245,245,247,.8);
+    border-bottom:1px solid var(--hairline);
+  }
+  .bar{
+    max-width:720px;margin:0 auto;padding:11px 18px;
+    display:flex;align-items:center;justify-content:space-between;gap:12px;
+  }
+  .brand{display:flex;align-items:center;gap:9px;text-decoration:none}
+  .brand svg{display:block}
+  .brand b{font-size:17px;font-weight:600;letter-spacing:-.01em;color:var(--brand)}
+  .actions{display:flex;align-items:center;gap:8px}
+  .pill{
+    font-size:13px;font-weight:500;color:var(--muted);
+    padding:7px 13px;border-radius:980px;border:1px solid var(--hairline);
+    background:var(--surface);transition:.18s ease;white-space:nowrap;text-decoration:none;
+  }
+  .pill:hover{color:var(--ink);border-color:rgba(0,0,0,.22)}
+  .lang{display:flex;border:1px solid var(--hairline);border-radius:980px;overflow:hidden;background:var(--surface)}
+  .lang button{font-size:12px;font-weight:600;color:var(--muted);padding:7px 11px}
+  .lang button.on{background:var(--brand);color:#fff}
+
+  /* ---------- Layout ---------- */
+  main{max-width:720px;margin:0 auto;padding:28px 18px 60px}
+  .screen{display:none;animation:rise .45s cubic-bezier(.2,.7,.2,1)}
+  .screen.on{display:block}
+  @keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+
+  /* ---------- Intro ---------- */
+  .hero{text-align:center;padding:30px 6px 10px}
+  .mark{margin:0 auto 22px;width:84px;height:84px}
+  h1{font-size:34px;line-height:1.12;font-weight:700;letter-spacing:-.02em;margin:0 0 12px}
+  .lede{font-size:17px;color:var(--muted);margin:0 auto;max-width:430px}
+  .steps{display:flex;justify-content:center;gap:7px;margin:26px 0 30px;flex-wrap:wrap}
+  .steps span{font-size:12.5px;color:var(--muted);background:var(--surface);border:1px solid var(--hairline);padding:6px 12px;border-radius:980px}
+  .cta{
+    display:inline-flex;align-items:center;gap:8px;
+    background:var(--brand);color:#fff;font-size:17px;font-weight:600;
+    padding:14px 30px;border-radius:980px;transition:.18s ease;box-shadow:var(--shadow);
+  }
+  .cta:hover{transform:translateY(-1px);filter:brightness(1.06)}
+  .cta:active{transform:translateY(0)}
+  .cta.secondary{background:var(--surface);color:var(--ink);border:1px solid var(--hairline);box-shadow:none}
+
+  /* ---------- Quiz ---------- */
+  .qhead{margin-bottom:18px}
+  .progress{display:flex;gap:6px;margin-bottom:18px}
+  .progress i{height:4px;flex:1;border-radius:4px;background:var(--hairline);transition:.3s}
+  .progress i.done{background:var(--brand)}
+  .progress i.now{background:var(--accent)}
+  .round-no{font-size:13px;font-weight:600;color:var(--accent);letter-spacing:.02em}
+  .qtitle{font-size:25px;font-weight:700;letter-spacing:-.02em;margin:6px 0 4px}
+  .qsub{font-size:14.5px;color:var(--muted);margin:0}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:22px 0 26px}
+  @media(min-width:560px){.grid{grid-template-columns:1fr 1fr}}
+  .chip{
+    position:relative;text-align:left;background:var(--surface);
+    border:1.5px solid var(--hairline);border-radius:var(--radius);
+    padding:16px 15px;font-size:15px;font-weight:500;color:var(--ink);
+    transition:transform .12s ease, border-color .15s, background .15s;
+    min-height:64px;display:flex;align-items:center;
+  }
+  .chip:active{transform:scale(.97)}
+  .chip .em{font-size:20px;margin-right:10px;flex:none}
+  .chip.sel{border-color:var(--accent);background:var(--accent-soft)}
+  .chip.sel:after{
+    content:"✓";position:absolute;top:9px;right:11px;
+    width:20px;height:20px;border-radius:50%;background:var(--accent);color:#fff;
+    font-size:12px;font-weight:700;display:grid;place-items:center;
+  }
+  .navrow{display:flex;align-items:center;justify-content:space-between;gap:12px}
+  .count{font-size:13.5px;color:var(--muted)}
+  .count b{color:var(--ink)}
+
+  /* ---------- Analyzing ---------- */
+  .analyze{text-align:center;padding:70px 0}
+  .scan{width:96px;height:96px;margin:0 auto 26px;animation:scan 1.4s ease-in-out infinite}
+  @keyframes scan{0%{transform:translate(-10px,-6px) rotate(-8deg)}50%{transform:translate(10px,6px) rotate(8deg)}100%{transform:translate(-10px,-6px) rotate(-8deg)}}
+  .analyze p{font-size:16px;color:var(--muted)}
+
+  /* ---------- Results ---------- */
+  .rhead{text-align:center;margin-bottom:8px}
+  .rhead h2{font-size:27px;font-weight:700;letter-spacing:-.02em;margin:0 0 6px}
+  .rhead p{font-size:15px;color:var(--muted);margin:0}
+  .reslist{margin:24px 0 8px;display:flex;flex-direction:column;gap:12px}
+  .res{
+    background:var(--surface);border:1px solid var(--hairline);border-radius:var(--radius);
+    padding:16px 17px;box-shadow:var(--shadow);opacity:0;transform:translateY(8px);
+    animation:resin .5s forwards;
+  }
+  @keyframes resin{to{opacity:1;transform:none}}
+  .res .top{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
+  .res .rank{font-size:13px;font-weight:700;color:var(--muted);width:26px;flex:none}
+  .res .name{font-size:17px;font-weight:600;flex:1}
+  .res .pct{font-size:18px;font-weight:700;color:var(--brand);font-variant-numeric:tabular-nums}
+  .res.gold .pct{color:var(--accent)}
+  .track{height:7px;border-radius:7px;background:var(--hairline);margin:11px 0 0;overflow:hidden}
+  .track i{display:block;height:100%;border-radius:7px;background:var(--brand);width:0;transition:width 1s cubic-bezier(.2,.8,.2,1)}
+  .res.gold .track i{background:linear-gradient(90deg,var(--accent),#5fb0ff)}
+  .books{display:flex;align-items:center;gap:8px;margin-top:13px;flex-wrap:wrap}
+  .books .bk{font-size:13px;color:var(--muted);margin-right:2px}
+  .books .bk b{color:var(--ink);font-weight:600}
+  .shop{font-size:12.5px;font-weight:600;padding:6px 12px;border-radius:980px;border:1px solid var(--hairline);background:var(--surface);transition:.15s;text-decoration:none;display:inline-flex;align-items:center;gap:5px}
+  .shop:hover{border-color:rgba(0,0,0,.25)}
+  .shop.amz{color:#b45309}
+  .shop.cou{color:#c2410c}
+
+  .resfoot{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:26px}
+
+  /* ---------- Footer ---------- */
+  footer{max-width:720px;margin:0 auto;padding:30px 18px 46px;text-align:center;border-top:1px solid var(--hairline)}
+  footer p{font-size:13px;color:var(--muted);margin:5px 0}
+  footer a{color:var(--brand);text-decoration:none;font-weight:500}
+
+  /* ---------- Consent ---------- */
+  .consent{
+    position:fixed;left:0;right:0;bottom:0;z-index:100;
+    padding:16px;display:none;
+    animation:up .4s cubic-bezier(.2,.8,.2,1);
+  }
+  .consent.show{display:block}
+  @keyframes up{from{transform:translateY(40px);opacity:0}to{transform:none;opacity:1}}
+  .consent .card{
+    max-width:640px;margin:0 auto;background:rgba(255,255,255,.9);
+    backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);
+    border:1px solid var(--hairline);border-radius:20px;box-shadow:0 12px 40px rgba(0,0,0,.18);
+    padding:18px 20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;
+  }
+  .consent p{font-size:13.5px;color:var(--muted);margin:0;flex:1;min-width:230px;line-height:1.45}
+  .consent p a{color:var(--accent);text-decoration:none}
+  .consent .btns{display:flex;gap:8px}
+  .consent .btns button{font-size:14px;font-weight:600;padding:10px 18px;border-radius:980px;transition:.15s}
+  .consent .ok{background:var(--brand);color:#fff}
+  .consent .ok:hover{filter:brightness(1.08)}
+  .consent .no{background:var(--surface);color:var(--ink);border:1px solid var(--hairline)}
+
+  .toast{
+    position:fixed;
+    background:rgba(29,29,31,.92);color:#fff;font-size:14px;font-weight:500;
+    padding:11px 18px;border-radius:980px;opacity:0;pointer-events:none;
+    transition:.3s;z-index:120;transform:translateX(-50%) translateY(20px);left:50%;bottom:28px;
+  }
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+  @media (prefers-reduced-motion: reduce){
+    *{animation:none!important;transition:none!important}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="bar">
+    <a class="brand" id="brandLink" href="#">
+      <svg width="26" height="32" viewBox="0 0 26 32" fill="none" aria-hidden="true">
+        <circle cx="13" cy="9.5" r="7.3" stroke="var(--brand)" stroke-width="3.4"/>
+        <rect x="11" y="18.5" width="4" height="11" rx="2" fill="var(--brand)"/>
+      </svg>
+      <b>OnlyOne</b>
+    </a>
+    <div class="actions">
+      <div class="lang" role="group" aria-label="Language">
+        <button id="ko" class="on">KO</button>
+        <button id="en">EN</button>
+      </div>
+      <a class="pill" id="homePill" href="#" target="_blank" rel="noopener"></a>
+    </div>
+  </div>
+</header>
+
+<main>
+  <!-- Intro -->
+  <section class="screen on" id="s-intro">
+    <div class="hero">
+      <svg class="mark" viewBox="0 0 26 32" fill="none" aria-hidden="true">
+        <circle cx="13" cy="9.5" r="7.3" stroke="var(--brand)" stroke-width="3.4"/>
+        <rect x="11" y="18.5" width="4" height="11" rx="2" fill="var(--brand)"/>
+      </svg>
+      <h1 id="title" data-t="title"></h1>
+      <p class="lede" data-t="lede"></p>
+      <div class="steps">
+        <span data-t="step1"></span>
+        <span data-t="step2"></span>
+        <span data-t="step3"></span>
+      </div>
+      <button class="cta" id="startBtn"><span data-t="start"></span> →</button>
+    </div>
+  </section>
+
+  <!-- Quiz -->
+  <section class="screen" id="s-quiz">
+    <div class="qhead">
+      <div class="progress" id="progress"></div>
+      <div class="round-no" id="roundNo"></div>
+      <div class="qtitle" id="qTitle"></div>
+      <p class="qsub" data-t="qsub"></p>
+    </div>
+    <div class="grid" id="grid"></div>
+    <div class="navrow">
+      <button class="pill" id="backBtn" data-t="back"></button>
+      <div class="count" id="count"></div>
+      <button class="cta" id="nextBtn"><span id="nextLbl"></span> →</button>
+    </div>
+  </section>
+
+  <!-- Analyzing -->
+  <section class="screen" id="s-analyze">
+    <div class="analyze">
+      <svg class="scan" viewBox="0 0 26 32" fill="none" aria-hidden="true">
+        <circle cx="13" cy="9.5" r="7.3" stroke="var(--accent)" stroke-width="3.4"/>
+        <rect x="11" y="18.5" width="4" height="11" rx="2" fill="var(--accent)"/>
+      </svg>
+      <p data-t="analyzing"></p>
+    </div>
+  </section>
+
+  <!-- Results -->
+  <section class="screen" id="s-result">
+    <div class="rhead">
+      <h2 data-t="resTitle"></h2>
+      <p data-t="resSub"></p>
+    </div>
+    <div class="reslist" id="reslist"></div>
+    <div class="resfoot">
+      <button class="cta" id="saveBtn"><span data-t="save"></span></button>
+      <button class="cta secondary" id="shareBtn" data-t="share"></button>
+      <button class="cta secondary" id="retryBtn" data-t="retry"></button>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <p data-t="footTag"></p>
+  <p><span data-t="footContact"></span> <a id="mail" href="#"></a></p>
+  <p style="opacity:.7">© <span id="year"></span> OnlyOne</p>
+</footer>
+
+<!-- Consent -->
+<div class="consent" id="consent">
+  <div class="card">
+    <p data-t="cookie"></p>
+    <div class="btns">
+      <button class="no" id="cNo" data-t="decline"></button>
+      <button class="ok" id="cOk" data-t="accept"></button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<canvas id="cv" width="1080" height="1350" style="display:none"></canvas>
+
+<script>
+/* =================== i18n =================== */
+const I18N = {
+  ko:{
+    title:"좋아하는 걸 고르면,\n직업이 보여요",
+    lede:"끌리는 순간 몇 개만 톡톡. 5번이면 어울리는 직업 10개를 %로 알려드려요.",
+    step1:"1분이면 끝", step2:"5개의 질문", step3:"직업 10개 추천",
+    start:"시작하기", qsub:"마음에 드는 만큼 골라요 (여러 개 가능)",
+    back:"이전", next:"다음", seeResult:"결과 보기",
+    countTpl:(n)=>`<b>${n}개</b> 선택됨`,
+    pickHint:"하나 이상 골라주세요",
+    analyzing:"끌림을 분석하는 중…",
+    resTitle:"당신과 어울리는 직업",
+    resSub:"위에서부터 잘 맞는 순서예요. 관련 책도 함께 둘러보세요.",
+    book:"추천 도서", save:"이미지로 저장", share:"공유하기", retry:"다시 하기",
+    footTag:"OnlyOne · For a Happy Day", footContact:"문의",
+    cookie:'더 나은 경험을 위해 방문 통계 쿠키를 사용해요. <a href="#" id="ppLink">개인정보 처리방침</a>',
+    accept:"동의", decline:"거부",
+    savedToast:"이미지를 저장했어요", copiedToast:"링크를 복사했어요",
+    home:"OnlyOne 홈"
+  },
+  en:{
+    title:"Pick what you love,\nsee your career",
+    lede:"Tap the moments that pull you in. Five rounds, then your top 10 careers by match.",
+    step1:"~1 minute", step2:"5 questions", step3:"10 careers",
+    start:"Start", qsub:"Pick as many as you like (multiple ok)",
+    back:"Back", next:"Next", seeResult:"See results",
+    countTpl:(n)=>`<b>${n}</b> selected`,
+    pickHint:"Pick at least one",
+    analyzing:"Scanning what pulls you in…",
+    resTitle:"Careers that fit you",
+    resSub:"Sorted by best match. Browse a related book too.",
+    book:"Book", save:"Save image", share:"Share", retry:"Start over",
+    footTag:"OnlyOne · For a Happy Day", footContact:"Contact",
+    cookie:'We use analytics cookies to improve your experience. <a href="#" id="ppLink">Privacy policy</a>',
+    accept:"Accept", decline:"Decline",
+    savedToast:"Image saved", copiedToast:"Link copied",
+    home:"OnlyOne home"
+  }
+};
+
+/* =================== Quiz data =================== */
+/* 각 항목: tags = {차원:가중치}. e=이모지, ko/en=라벨 */
+const ROUNDS = [
+  { title:{ko:"끌리는 순간은?",en:"What pulls you in?"}, items:[
+    {e:"🎨",ko:"빈 화이트보드를 보면 그리고 싶다",en:"A blank whiteboard begs to be drawn on",t:{creative:3,visual:2}},
+    {e:"🧩",ko:"꼬인 매듭을 풀어내는 쾌감",en:"The thrill of untangling a knot",t:{analytical:3,detail:2}},
+    {e:"💬",ko:"처음 본 사람과 5분 만에 친해짐",en:"Friends with a stranger in 5 minutes",t:{social:3}},
+    {e:"🙏",ko:'누군가 "고마워요"라고 할 때',en:'When someone says "thank you"',t:{helping:3}},
+    {e:"🔧",ko:"부서진 걸 직접 고칠 때",en:"Fixing what's broken with your hands",t:{handson:3}},
+    {e:"📱",ko:"새 기기·앱을 만지작거리는 시간",en:"Tinkering with a new app or gadget",t:{tech:3}},
+    {e:"🌿",ko:"흙냄새, 바다냄새가 좋다",en:"You love the smell of soil and sea",t:{nature:3}},
+    {e:"📖",ko:"끝내주는 문장을 만났을 때",en:"Meeting a perfect sentence",t:{words:3}},
+    {e:"📊",ko:"숫자가 딱 맞아떨어질 때",en:"When the numbers line up exactly",t:{numbers:3,analytical:1}},
+    {e:"🎤",ko:"무대 위 스포트라이트",en:"The spotlight on a stage",t:{leadership:2,social:2,visual:1}}
+  ]},
+  { title:{ko:"이상적인 작업실은?",en:"Your ideal workspace?"}, items:[
+    {e:"🤫",ko:"조용한 작업실, 나 혼자",en:"A quiet studio, just me",t:{calm:3,freedom:2}},
+    {e:"🗣️",ko:"시끌벅적한 팀 한가운데",en:"In the middle of a buzzing team",t:{social:3,leadership:1}},
+    {e:"🚐",ko:"야외, 매일 다른 장소",en:"Outdoors, a new place each day",t:{nature:2,freedom:3}},
+    {e:"🪚",ko:"도구와 재료가 가득한 공방",en:"A workshop full of tools",t:{handson:3,creative:1}},
+    {e:"🖥️",ko:"모니터 여러 대 앞",en:"In front of several monitors",t:{tech:3,analytical:1}},
+    {e:"🛍️",ko:"사람들이 줄 서는 가게",en:"A shop with a line out the door",t:{business:3,social:1}},
+    {e:"📌",ko:"화이트보드와 포스트잇",en:"Whiteboards and sticky notes",t:{creative:2,structure:2}},
+    {e:"🔬",ko:"실험실·연구실",en:"A lab or research room",t:{analytical:3,detail:2}},
+    {e:"🎬",ko:"무대, 카메라 앞",en:"A stage, in front of a camera",t:{visual:2,social:2}},
+    {e:"📚",ko:"책과 자료가 쌓인 서재",en:"A study stacked with books",t:{words:3,detail:1}}
+  ]},
+  { title:{ko:"못 참는 게 있다면?",en:"What you can't stand?"}, items:[
+    {e:"🔍",ko:"대충 넘어가는 것",en:"Doing things half-baked",t:{detail:3}},
+    {e:"🔁",ko:"매일 똑같은 루틴",en:"The exact same routine daily",t:{freedom:3,risk:1}},
+    {e:"🤝",ko:"나 혼자만 잘되는 것",en:"Winning while others don't",t:{helping:3,social:1}},
+    {e:"♻️",ko:"비효율과 낭비",en:"Waste and inefficiency",t:{analytical:2,structure:2}},
+    {e:"❓",ko:"답 안 나오는 문제 방치",en:"Leaving a problem unsolved",t:{analytical:3}},
+    {e:"🚫",ko:"못생긴 디자인",en:"Ugly design",t:{visual:3,creative:2}},
+    {e:"🏃",ko:"가만히 앉아만 있기",en:"Just sitting still all day",t:{body:3,handson:1}},
+    {e:"📢",ko:"근거 없는 주장",en:"Claims with no evidence",t:{analytical:2,words:2}},
+    {e:"🕰️",ko:"결정 못 내리는 회의",en:"Meetings that decide nothing",t:{leadership:3,structure:1}},
+    {e:"💸",ko:"좋은 기회를 놓치는 것",en:"Letting an opportunity slip",t:{business:2,risk:2}}
+  ]},
+  { title:{ko:"나의 숨은 초능력은?",en:"Your secret superpower?"}, items:[
+    {e:"🎯",ko:"한눈에 핵심을 잡는다",en:"Grasp the core at a glance",t:{analytical:2,leadership:2}},
+    {e:"☺️",ko:"분위기를 부드럽게 만든다",en:"Soften any room",t:{social:3,helping:1}},
+    {e:"🛠️",ko:"손으로 뭐든 만든다",en:"Make anything by hand",t:{handson:3,creative:1}},
+    {e:"⛏️",ko:"끝까지 파고든다",en:"Dig until it's done",t:{detail:3,analytical:1}},
+    {e:"✍️",ko:"말과 글로 설득한다",en:"Persuade with words",t:{words:3,social:1}},
+    {e:"🖌️",ko:"그림이 절로 그려진다",en:"Images flow out of you",t:{visual:3,creative:2}},
+    {e:"📈",ko:"숫자로 미래를 본다",en:"See the future in numbers",t:{numbers:3,business:1}},
+    {e:"🧊",ko:"위기에 더 침착하다",en:"Calmer under pressure",t:{calm:3,leadership:1}},
+    {e:"💪",ko:"몸 쓰는 건 자신 있다",en:"Confident with your body",t:{body:3}},
+    {e:"⚡",ko:"새 기술을 빨리 익힌다",en:"Learn new tech fast",t:{tech:3}}
+  ]},
+  { title:{ko:"성공의 모습은?",en:"What success looks like?"}, items:[
+    {e:"🌟",ko:"내 작품에 사람들이 감동",en:"People moved by my work",t:{creative:3,visual:1}},
+    {e:"⚙️",ko:"내가 만든 게 실제로 작동",en:"What I built actually works",t:{tech:2,handson:2}},
+    {e:"💖",ko:"누군가의 삶이 나아짐",en:"Someone's life gets better",t:{helping:3}},
+    {e:"🏆",ko:"팀을 이끌어 목표 달성",en:"Lead a team to the goal",t:{leadership:3,business:1}},
+    {e:"🕊️",ko:"자유롭게 내 시간을 산다",en:"Own my own time",t:{freedom:3}},
+    {e:"🧠",ko:"어려운 문제를 풀어냄",en:"Crack a hard problem",t:{analytical:3}},
+    {e:"👏",ko:"무대에서 박수받기",en:"Applause on a stage",t:{social:2,visual:2}},
+    {e:"💼",ko:"큰 거래를 성사시킴",en:"Close a big deal",t:{business:3,risk:1}},
+    {e:"🏔️",ko:"자연 속에서 일하기",en:"Work surrounded by nature",t:{nature:3,calm:1}},
+    {e:"🎓",ko:"깊이 있는 전문가 되기",en:"Become a deep expert",t:{detail:2,words:2}}
+  ]}
+];
+
+/* =================== Jobs =================== */
+function bk(ko,en,q){return{ko,en,q};}
+const JOBS = [
+  {ko:"UX·UI 디자이너",en:"UX/UI Designer",t:{visual:3,creative:3,tech:2,detail:2},book:bk("디자인과 인간심리","The Design of Everyday Things","UX 디자인")},
+  {ko:"소프트웨어 개발자",en:"Software Engineer",t:{tech:3,analytical:3,detail:2,creative:1},book:bk("클린 코드","Clean Code","클린 코드")},
+  {ko:"데이터 사이언티스트",en:"Data Scientist",t:{numbers:3,analytical:3,tech:2,detail:1},book:bk("파이썬 머신러닝","Hands-On Machine Learning","머신러닝 입문")},
+  {ko:"프로덕트 매니저",en:"Product Manager",t:{leadership:3,business:2,analytical:2,social:2},book:bk("인스파이어드","Inspired","인스파이어드 프로덕트")},
+  {ko:"그래픽 디자이너",en:"Graphic Designer",t:{visual:3,creative:3,detail:1},book:bk("그리드 시스템","Grid Systems","그래픽 디자인")},
+  {ko:"카피라이터",en:"Copywriter",t:{words:3,creative:2,social:1},book:bk("카피책","The Copywriter's Handbook","카피라이팅")},
+  {ko:"작가·소설가",en:"Writer",t:{words:3,creative:3,calm:1},book:bk("유혹하는 글쓰기","On Writing","유혹하는 글쓰기")},
+  {ko:"기자·저널리스트",en:"Journalist",t:{words:3,social:2,analytical:1,risk:1},book:bk("기자의 글쓰기","The Elements of Journalism","기자의 글쓰기")},
+  {ko:"교사",en:"Teacher",t:{helping:3,social:2,words:2,structure:1},book:bk("가르칠 수 있는 용기","The Courage to Teach","가르칠 수 있는 용기")},
+  {ko:"간호사",en:"Nurse",t:{helping:3,detail:2,body:2,calm:1},book:bk("나는 간호사, 사람입니다","The Shift","간호사 에세이")},
+  {ko:"의사",en:"Doctor",t:{helping:3,analytical:2,detail:3},book:bk("의사의 생각","Being Mortal","의학 교양")},
+  {ko:"심리상담사",en:"Counselor / Therapist",t:{helping:3,social:2,calm:2,words:1},book:bk("비폭력대화","Nonviolent Communication","비폭력대화")},
+  {ko:"마케터",en:"Marketer",t:{business:3,creative:2,social:2,analytical:1},book:bk("마케팅이다","This Is Marketing","세스 고딘 마케팅")},
+  {ko:"창업가",en:"Entrepreneur",t:{business:3,risk:3,leadership:2,freedom:1},book:bk("제로 투 원","Zero to One","제로 투 원")},
+  {ko:"세일즈 전문가",en:"Sales Professional",t:{social:3,business:3,risk:1},book:bk("세일즈 바이블","The Psychology of Selling","영업 세일즈")},
+  {ko:"회계사",en:"Accountant",t:{numbers:3,detail:3,structure:2},book:bk("회계 천재가 된 홍대리","Accounting Made Simple","회계 입문")},
+  {ko:"금융 애널리스트",en:"Financial Analyst",t:{numbers:3,analytical:3,business:2},book:bk("현명한 투자자","The Intelligent Investor","현명한 투자자")},
+  {ko:"변호사",en:"Lawyer",t:{words:3,analytical:3,structure:2,detail:2},book:bk("법학 통론","Law 101","법학 입문")},
+  {ko:"건축가",en:"Architect",t:{visual:3,creative:3,detail:2,structure:1,handson:1},book:bk("건축을 묻다","Towards a New Architecture","건축 입문")},
+  {ko:"엔지니어",en:"Engineer",t:{tech:3,handson:3,analytical:2,detail:2},book:bk("공학이란 무엇인가","The Existential Pleasures of Engineering","공학 입문")},
+  {ko:"요리사·셰프",en:"Chef",t:{handson:3,creative:2,body:1,business:1},book:bk("셰프의 탄생","Kitchen Confidential","요리 셰프")},
+  {ko:"사진작가",en:"Photographer",t:{visual:3,creative:3,freedom:2},book:bk("결정적 순간","The Decisive Moment","사진 입문")},
+  {ko:"영상 크리에이터",en:"Video Creator",t:{visual:3,creative:3,tech:2,social:2},book:bk("유튜브의 신","YouTube Secrets","유튜브 영상 편집")},
+  {ko:"음악가",en:"Musician",t:{creative:3,freedom:2,body:1},book:bk("음악의 기쁨","This Is Your Brain on Music","음악 입문")},
+  {ko:"배우·공연가",en:"Performer",t:{social:3,visual:2,creative:2,risk:1},book:bk("배우 수업","An Actor Prepares","연기 입문")},
+  {ko:"운동선수·트레이너",en:"Athlete / Trainer",t:{body:3,helping:1,social:1},book:bk("운동화 신은 뇌","Spark","운동 트레이닝")},
+  {ko:"수의사",en:"Veterinarian",t:{helping:3,nature:2,detail:2,body:1},book:bk("수의사가 말하는 수의사","All Creatures Great and Small","수의사")},
+  {ko:"환경·생태 전문가",en:"Environmental Scientist",t:{nature:3,analytical:2,detail:1},book:bk("침묵의 봄","Silent Spring","침묵의 봄")},
+  {ko:"농부·원예가",en:"Farmer / Gardener",t:{nature:3,handson:3,calm:2,body:2},book:bk("조화로운 삶","The Market Gardener","텃밭 농사")},
+  {ko:"파일럿",en:"Pilot",t:{tech:2,detail:2,risk:2,calm:2,body:1},book:bk("비행의 시대","Fate Is the Hunter","항공 파일럿")},
+  {ko:"프로젝트 매니저",en:"Project Manager",t:{leadership:3,structure:3,detail:2,social:1},book:bk("프로젝트 관리 입문","Making Things Happen","프로젝트 관리")},
+  {ko:"HR·인사 전문가",en:"HR Specialist",t:{social:3,helping:2,structure:2,detail:1},book:bk("사람을 남기는 조직","Work Rules!","인사 HR")},
+  {ko:"연구원·과학자",en:"Scientist / Researcher",t:{analytical:3,detail:3,calm:2,numbers:1},book:bk("코스모스","Cosmos","코스모스")},
+  {ko:"게임 개발자",en:"Game Developer",t:{tech:3,creative:3,visual:2,detail:1},book:bk("게임 디자인 원론","The Art of Game Design","게임 개발")},
+  {ko:"일러스트레이터",en:"Illustrator",t:{visual:3,creative:3,freedom:2,handson:1},book:bk("그림 그리는 법","Drawing on the Right Side of the Brain","드로잉 입문")},
+  {ko:"통·번역가",en:"Translator / Interpreter",t:{words:3,detail:2,calm:1},book:bk("번역가의 일","Is That a Fish in Your Ear?","번역 입문")},
+  {ko:"사회복지사",en:"Social Worker",t:{helping:3,social:2,calm:1,structure:1},book:bk("사회복지의 길","The Social Work Skills Workbook","사회복지")}
+];
+
+/* =================== State =================== */
+let lang = (localStorage.getItem('oo_lang')) || (navigator.language.startsWith('ko')?'ko':(navigator.language.startsWith('en')?'en':'ko'));
+let round = 0;
+let selected = ROUNDS.map(()=>new Set());
+
+const $ = s=>document.querySelector(s);
+const screens = {intro:'#s-intro',quiz:'#s-quiz',analyze:'#s-analyze',result:'#s-result'};
+function show(name){ for(const k in screens) $(screens[k]).classList.toggle('on', k===name); window.scrollTo({top:0,behavior:'smooth'}); }
+
+/* =================== i18n apply =================== */
+function applyI18n(){
+  const d = I18N[lang];
+  document.documentElement.lang = lang;
+  document.querySelectorAll('[data-t]').forEach(el=>{
+    const v = d[el.getAttribute('data-t')];
+    if(typeof v==='string'){ if(/<a/.test(v)) el.innerHTML=v; else el.textContent=v; }
+  });
+  $('#title').innerHTML = d.title.replace(/\n/g,'<br>');
+  $('#homePill').textContent = d.home;
+  $('#ko').classList.toggle('on',lang==='ko');
+  $('#en').classList.toggle('on',lang==='en');
+  $('#nextLbl').textContent = (round>=ROUNDS.length-1)? d.seeResult : d.next;
+  if($('#s-quiz').classList.contains('on')) renderRound();
+  if($('#s-result').classList.contains('on')) renderResults();
+}
+
+/* =================== Quiz render =================== */
+function renderRound(){
+  const d = I18N[lang], R = ROUNDS[round];
+  $('#roundNo').textContent = (lang==='ko'?`질문 ${round+1} / ${ROUNDS.length}`:`Question ${round+1} / ${ROUNDS.length}`);
+  $('#qTitle').textContent = R.title[lang];
+  const prog = $('#progress'); prog.innerHTML='';
+  ROUNDS.forEach((_,i)=>{ const i2=document.createElement('i'); i2.className = i<round?'done':(i===round?'now':''); prog.appendChild(i2); });
+  const grid = $('#grid'); grid.innerHTML='';
+  R.items.forEach((it,idx)=>{
+    const b=document.createElement('button');
+    b.className='chip'+(selected[round].has(idx)?' sel':'');
+    b.innerHTML=`<span class="em">${it.e}</span><span>${it[lang]}</span>`;
+    b.onclick=()=>{ selected[round].has(idx)?selected[round].delete(idx):selected[round].add(idx); b.classList.toggle('sel'); updateCount(); };
+    grid.appendChild(b);
+  });
+  $('#backBtn').style.visibility = round===0?'hidden':'visible';
+  $('#nextLbl').textContent = (round>=ROUNDS.length-1)? d.seeResult : d.next;
+  updateCount();
+}
+function updateCount(){
+  const n=selected[round].size;
+  $('#count').innerHTML = n>0 ? I18N[lang].countTpl(n) : `<span style="color:var(--muted)">${I18N[lang].pickHint}</span>`;
+  $('#nextBtn').style.opacity = n>0?1:.4;
+  $('#nextBtn').disabled = n===0;
+}
+
+/* =================== Scoring =================== */
+function userVector(){
+  const v={};
+  ROUNDS.forEach((R,ri)=> selected[ri].forEach(idx=>{
+    const t=R.items[idx].t; for(const k in t) v[k]=(v[k]||0)+t[k];
+  }));
+  return v;
+}
+function cosine(a,b){
+  let dot=0,na=0,nb=0; const keys=new Set([...Object.keys(a),...Object.keys(b)]);
+  keys.forEach(k=>{const x=a[k]||0,y=b[k]||0;dot+=x*y;});
+  for(const k in a) na+=a[k]*a[k]; for(const k in b) nb+=b[k]*b[k];
+  return (na&&nb)? dot/(Math.sqrt(na)*Math.sqrt(nb)) : 0;
+}
+function computeTop(){
+  const uv=userVector();
+  let scored=JOBS.map(j=>({job:j,cos:cosine(uv,j.t)}));
+  scored.sort((a,b)=>b.cos-a.cos);
+  const max=scored[0].cos||1;
+  return scored.slice(0,10).map((s,i)=>({...s, pct: Math.max(2, Math.round(s.cos/max*96+3)) , rank:i+1}));
+}
+
+/* =================== Results render =================== */
+let lastTop=[];
+function renderResults(){
+  const d=I18N[lang];
+  const list=$('#reslist'); list.innerHTML='';
+  lastTop.forEach((r,i)=>{
+    const j=r.job;
+    const amz=`https://www.amazon.com/s?k=${encodeURIComponent(j.book.q)}&tag=${ONLYONE.AMAZON_TAG}`;
+    const cou=`${ONLYONE.COUPANG_BASE}${encodeURIComponent(j.book.q)}`;
+    const el=document.createElement('div');
+    el.className='res'+(i===0?' gold':'');
+    el.style.animationDelay=(i*0.06)+'s';
+    el.innerHTML=`
+      <div class="top">
+        <span class="rank">${r.rank}</span>
+        <span class="name">${j[lang]}</span>
+        <span class="pct">${r.pct}%</span>
+      </div>
+      <div class="track"><i data-w="${r.pct}"></i></div>
+      <div class="books">
+        <span class="bk">${d.book}: <b>${j.book[lang]}</b></span>
+        <a class="shop amz" href="${amz}" target="_blank" rel="noopener sponsored" data-job="${j.en}">Amazon</a>
+        <a class="shop cou" href="${cou}" target="_blank" rel="noopener sponsored" data-job="${j.en}">Coupang</a>
+      </div>`;
+    list.appendChild(el);
+  });
+  requestAnimationFrame(()=>setTimeout(()=>document.querySelectorAll('.track i').forEach(i=>i.style.width=i.dataset.w+'%'),120));
+  list.querySelectorAll('.shop').forEach(a=>a.addEventListener('click',()=>track('book_click',{job:a.dataset.job,store:a.classList.contains('amz')?'amazon':'coupang'})));
+}
+
+/* =================== Flow =================== */
+$('#startBtn').onclick=()=>{ round=0; selected=ROUNDS.map(()=>new Set()); show('quiz'); renderRound(); track('quiz_start'); };
+$('#backBtn').onclick=()=>{ if(round>0){round--; renderRound();} };
+$('#nextBtn').onclick=()=>{
+  if(selected[round].size===0) return;
+  track('round_done',{round:round+1,picks:selected[round].size});
+  if(round<ROUNDS.length-1){ round++; renderRound(); }
+  else finish();
+};
+function finish(){
+  show('analyze'); track('quiz_complete');
+  lastTop=computeTop();
+  writeHash();
+  setTimeout(()=>{ show('result'); renderResults(); track('result_view',{top:lastTop[0].job.en,pct:lastTop[0].pct}); }, 1400);
+}
+$('#retryBtn').onclick=()=>{ location.hash=''; show('intro'); track('retry'); };
+
+/* =================== Share via hash =================== */
+function writeHash(){
+  try{
+    const payload = selected.map(s=>[...s]);
+    location.hash = 'r='+btoa(unescape(encodeURIComponent(JSON.stringify(payload))));
+  }catch(e){}
+}
+function loadHash(){
+  const m=location.hash.match(/r=([^&]+)/);
+  if(!m) return false;
+  try{
+    const payload=JSON.parse(decodeURIComponent(escape(atob(m[1]))));
+    if(!Array.isArray(payload)||payload.length!==ROUNDS.length) return false;
+    selected=payload.map(a=>new Set(a));
+    lastTop=computeTop();
+    show('result'); renderResults();
+    return true;
+  }catch(e){ return false; }
+}
+
+/* =================== Save image =================== */
+function drawMark(ctx,cx,cy,s,color){
+  ctx.strokeStyle=color; ctx.lineWidth=s*0.13; ctx.beginPath();
+  ctx.arc(cx,cy,s*0.28,0,Math.PI*2); ctx.stroke();
+  ctx.fillStyle=color; const rw=s*0.15, rh=s*0.42, rx=cx-rw/2, ry=cy+s*0.34;
+  roundRect(ctx,rx,ry,rw,rh,rw/2); ctx.fill();
+}
+function roundRect(ctx,x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath();}
+
+function buildCard(){
+  const cv=$('#cv'), ctx=cv.getContext('2d'), W=1080,H=1350;
+  ctx.fillStyle='#ffffff'; ctx.fillRect(0,0,W,H);
+  ctx.fillStyle='#f5f5f7'; roundRect(ctx,40,40,W-80,H-80,44); ctx.fill();
+  drawMark(ctx,W/2,150,150,'#3f4550');
+  ctx.textAlign='center'; ctx.fillStyle='#1d1d1f';
+  ctx.font='700 52px Pretendard, sans-serif';
+  ctx.fillText(lang==='ko'?'나와 어울리는 직업':'Careers that fit me', W/2, 300);
+  ctx.font='400 26px Pretendard, sans-serif'; ctx.fillStyle='#6e6e73';
+  ctx.fillText('OnlyOne · Career Finder', W/2, 344);
+  const top=lastTop.slice(0,5); let y=430; const mx=120, bw=W-mx*2;
+  top.forEach((r,i)=>{
+    ctx.textAlign='left'; ctx.fillStyle= i===0?'#0a84ff':'#1d1d1f';
+    ctx.font='600 38px Pretendard, sans-serif';
+    ctx.fillText(`${r.rank}. ${r.job[lang]}`, mx, y);
+    ctx.textAlign='right'; ctx.font='700 38px Pretendard, sans-serif';
+    ctx.fillStyle= i===0?'#0a84ff':'#3f4550';
+    ctx.fillText(r.pct+'%', mx+bw, y);
+    ctx.fillStyle='#e3e3e6'; roundRect(ctx,mx,y+18,bw,16,8); ctx.fill();
+    ctx.fillStyle= i===0?'#0a84ff':'#3f4550'; roundRect(ctx,mx,y+18,bw*r.pct/100,16,8); ctx.fill();
+    y+=130;
+  });
+  ctx.textAlign='center'; ctx.fillStyle='#6e6e73'; ctx.font='400 26px Pretendard, sans-serif';
+  ctx.fillText('main.onlyonecorpceo.workers.dev', W/2, H-90);
+  ctx.fillStyle='#aeaeb2'; ctx.font='400 22px Pretendard, sans-serif';
+  ctx.fillText('OnlyOne · For a Happy Day', W/2, H-56);
+  return cv;
+}
+$('#saveBtn').onclick=async ()=>{
+  const cv=buildCard();
+  track('save_image',{top:lastTop[0].job.en});
+  cv.toBlob(async (blob)=>{
+    const file=new File([blob],'onlyone-career.png',{type:'image/png'});
+    if(navigator.canShare && navigator.canShare({files:[file]})){
+      try{ await navigator.share({files:[file], title:'OnlyOne', text: shareText()}); return; }catch(e){}
+    }
+    const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='onlyone-career.png'; a.click();
+    toast(I18N[lang].savedToast);
+  },'image/png');
+};
+function shareText(){
+  const t=lastTop[0];
+  return lang==='ko'
+    ? `내 1위 직업은 "${t.job.ko}" (${t.pct}%)! OnlyOne 직업 찾기 🔍`
+    : `My #1 career is "${t.job.en}" (${t.pct}%)! Find yours on OnlyOne 🔍`;
+}
+$('#shareBtn').onclick=async ()=>{
+  writeHash();
+  const url=location.href, text=shareText();
+  track('share',{top:lastTop[0].job.en});
+  if(navigator.share){ try{ await navigator.share({title:'OnlyOne · Career Finder',text,url}); return; }catch(e){} }
+  try{ await navigator.clipboard.writeText(text+' '+url); toast(I18N[lang].copiedToast); }catch(e){ prompt('Copy:', text+' '+url); }
+};
+
+/* =================== Toast =================== */
+let tT;
+function toast(msg){ const el=$('#toast'); el.textContent=msg; el.classList.add('show'); clearTimeout(tT); tT=setTimeout(()=>el.classList.remove('show'),2200); }
+
+/* =================== Lang & links =================== */
+$('#ko').onclick=()=>{ lang='ko'; localStorage.setItem('oo_lang','ko'); applyI18n(); track('lang',{to:'ko'}); };
+$('#en').onclick=()=>{ lang='en'; localStorage.setItem('oo_lang','en'); applyI18n(); track('lang',{to:'en'}); };
+function wireLinks(){
+  $('#brandLink').href=ONLYONE.LANDING; $('#brandLink').target='_blank'; $('#brandLink').rel='noopener';
+  $('#homePill').href=ONLYONE.LANDING;
+  $('#brandLink').addEventListener('click',()=>track('onlyone_click',{from:'brand'}));
+  $('#homePill').addEventListener('click',()=>track('onlyone_click',{from:'pill'}));
+  $('#mail').href='mailto:'+ONLYONE.CONTACT; $('#mail').textContent=ONLYONE.CONTACT;
+  $('#year').textContent=new Date().getFullYear();
+}
+
+/* =================== GA4 + Consent Mode v2 =================== */
+window.dataLayer=window.dataLayer||[];
+function gtag(){dataLayer.push(arguments);}
+gtag('consent','default',{ad_storage:'denied',ad_user_data:'denied',ad_personalization:'denied',analytics_storage:'denied',wait_for_update:500});
+gtag('js',new Date());
+function loadGA(){
+  if(window.__gaLoaded || !ONLYONE.GA_ID || ONLYONE.GA_ID.indexOf('XXXX')>-1) return;
+  window.__gaLoaded=true;
+  const s=document.createElement('script'); s.async=true;
+  s.src='https://www.googletagmanager.com/gtag/js?id='+ONLYONE.GA_ID;
+  document.head.appendChild(s);
+  gtag('config',ONLYONE.GA_ID,{anonymize_ip:true});
+}
+function track(name,params){ try{ gtag('event',name,params||{}); }catch(e){} }
+
+const CONSENT_KEY='oo_consent';
+function applyConsent(state){
+  if(state==='granted'){
+    gtag('consent','update',{ad_storage:'granted',ad_user_data:'granted',ad_personalization:'granted',analytics_storage:'granted'});
+    loadGA();
+  }
+}
+function initConsent(){
+  const saved=localStorage.getItem(CONSENT_KEY);
+  if(saved==='granted'){ applyConsent('granted'); }
+  else if(saved==='denied'){ /* keep denied */ }
+  else { $('#consent').classList.add('show'); }
+  $('#cOk').onclick=()=>{ localStorage.setItem(CONSENT_KEY,'granted'); $('#consent').classList.remove('show'); applyConsent('granted'); track('consent',{choice:'granted'}); };
+  $('#cNo').onclick=()=>{ localStorage.setItem(CONSENT_KEY,'denied'); $('#consent').classList.remove('show'); };
+}
+
+/* =================== Init =================== */
+wireLinks();
+applyI18n();
+initConsent();
+if(!loadHash()){ show('intro'); }
+// privacy link inside consent (delegated, re-bound on lang change)
+document.addEventListener('click',e=>{ if(e.target && e.target.id==='ppLink'){ e.preventDefault(); toast(lang==='ko'?'방문 통계 외 개인정보를 수집하지 않습니다.':'We only collect anonymous visit stats.'); } });
+</script>
+</body>
+</html>
